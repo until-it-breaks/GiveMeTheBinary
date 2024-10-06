@@ -16,6 +16,9 @@
 #define GAMING3 5
 #define GAMING4 6
 
+#define LED_COUNT 4
+#define BUTTON_COUNT 4
+
 //Pins
 #define BUTTON1_PIN 4
 #define BUTTON2_PIN 5
@@ -36,23 +39,58 @@
 #define MAX_TIME_WINDOW 10
 #define RED_LED_BRIGHTNESS_STEP 5
 
+//Game variables
 int state;
 int difficulty;
 int score;
-
 int currentRandomValue;
 int currentMaxTime;
 
+//Red led variables
 int redLedBrightness;
 int redLedBrightnessStep;
+
+//Arrays
+int leds[LED_COUNT - 1];
+bool ledStates[LED_COUNT - 1];
+int buttons[BUTTON_COUNT - 1];
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // 0x27 is the address for most I2C LCD displays
 
 void setup() {
   srand(time(NULL));
+  redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
+  
+  leds[0] = GREEN_LED1_PIN;
+  leds[1] = GREEN_LED2_PIN;
+  leds[2] = GREEN_LED3_PIN;
+  leds[3] = GREEN_LED4_PIN;
+
+  buttons[0] = BUTTON1_PIN;
+  buttons[1] = BUTTON2_PIN;
+  buttons[2] = BUTTON3_PIN;
+  buttons[3] = BUTTON4_PIN;
+
+  for (auto &&led: leds)
+  {
+    pinMode(led, OUTPUT);
+  }
+
+  for (auto &&ledState : ledStates)
+  {
+    ledState = false;
+  }
+
+  for (auto &&button: buttons)
+  {
+    pinMode(button, INPUT);
+  }
+
+  pinMode(RED_LED_PIN, OUTPUT);
+  pinMode(POTENTIOMETER_PIN, INPUT);
+
   lcd.init();
   lcd.backlight();
-  redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
   state = SETUP1;
 }
 
@@ -99,7 +137,11 @@ void setup2() {
   }
   redLedBrightness = redLedBrightness + redLedBrightnessStep;
   analogWrite(RED_LED_PIN, redLedBrightness);
+  
   //if b1 is pressed in time go to next state else force sleep.
+  if (digitalRead(buttons[0] == HIGH)) {
+    state = GAMING1;
+  }
 }
 
 void wake() {
@@ -116,10 +158,45 @@ void gaming1() {
 }
 
 void gaming2() {
-  //read button 1 2 3 4
-  //power them on/off accordingly
-  //read LED 1 2 3 4
-  //if leds corresponding binary value sum equals to the random value go to gaming3 else go to gaming4
+  for (size_t i = 0; i < BUTTON_COUNT - 1; i++)
+  {
+    if(digitalRead(buttons[i]) == HIGH) {
+      digitalWrite(leds[i], HIGH);
+      ledStates[i] = true;
+    } else {
+      digitalWrite(leds[i], LOW);
+      ledStates[i] = false;
+    }
+  }
+  int sum = 0;
+  for (size_t i = 0; i < LED_COUNT - 1; i++)
+  {
+    if (ledStates[i] == true) {
+      switch (i) {
+        case 0:
+          sum = sum + 1;
+          break;
+        case 1:
+          sum = sum + 2;
+          break;
+        case 2:
+          sum = sum + 4;
+          break;
+        case 3:
+          sum = sum + 8;
+          break;
+        default:
+          sum = sum + 0;
+          break;
+      }
+    }
+  }
+  if (sum == currentRandomValue) {
+    //Stop timer and transition to next stage
+    state = GAMING3;
+  }
+  //Timer runs out, transition to game over
+  state = GAMING4;
 }
 
 void gaming3() {
