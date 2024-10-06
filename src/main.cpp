@@ -59,9 +59,9 @@ int redLedBrightness;
 int redLedBrightnessStep;
 
 //Arrays
-int leds[LED_COUNT - 1];
-bool ledStates[LED_COUNT - 1];
-int buttons[BUTTON_COUNT - 1];
+int leds[LED_COUNT];
+bool ledStates[LED_COUNT];
+int buttons[BUTTON_COUNT];
 
 bool timeWindowElapsed;
 
@@ -109,16 +109,22 @@ void setup() {
 void loop() {
   switch (state) {
   case SETUP1:
+    setup1();
     break;
   case SETUP2:
+    setup2();
     break;
   case GAMING1:
+    gaming1();
     break;
   case GAMING2:
+    gaming2();
     break;
   case GAMING3:
+    gaming3();
     break;
   case GAMING4:
+    gaming4();
     break;
   default:
     break;
@@ -127,11 +133,11 @@ void loop() {
 
 void setup1() {
   score = 0;
-  difficulty = 0;
+  difficulty = VERY_EASY;
   currentMaxTime = MAX_TIME_WINDOW;
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.println("Welcome to GMB!");
+  lcd.print("Welcome to GMB!");
   delay(1000);
   //start timer and transition to next state
   state = SETUP2;
@@ -158,7 +164,7 @@ void setup2() {
     analogWrite(RED_LED_PIN, redLedBrightness);
     
     //if b1 is pressed in time go to next state
-    if (digitalRead(buttons[0] == HIGH)) {
+    if (digitalRead(buttons[0]) == HIGH) {
       state = GAMING1;
     }
   }
@@ -222,9 +228,9 @@ void gaming3() {
   currentMaxTime = currentMaxTime - TIME_DELTA;
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.println("You won this round");
+  lcd.print("You won this round");
   lcd.setCursor(0,1);
-  lcd.println("Score " + String(score));
+  lcd.print("Score " + String(score));
   delay(2000);
   state = GAMING1;
 }
@@ -235,9 +241,9 @@ void gaming4() {
   delay(1000);
   digitalWrite(RED_LED_PIN, LOW);
   lcd.setCursor(0,0);
-  lcd.println("Game Over!");
+  lcd.print("Game Over!");
   lcd.setCursor(0,1);
-  lcd.println("Score " + String(score));
+  lcd.print("Score " + String(score));
   delay(10000);
   state = SETUP1;
 }
@@ -274,7 +280,7 @@ void wakeUp() {
 void sleepNow() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
-  attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, LOW);
+  attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, HIGH); //When b1 is pressed
   sleep_mode();
   sleep_disable();
   detachInterrupt(digitalPinToInterrupt(BUTTON1_PIN));
