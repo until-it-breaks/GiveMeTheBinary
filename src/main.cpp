@@ -3,6 +3,7 @@
 #include <time.h>
 #include <LiquidCrystal_I2C.h>
 #include <TimerOne.h>
+#include <avr/sleep.h>
 
 /*
   Give Me The Binary!
@@ -21,7 +22,7 @@
 #define BUTTON_COUNT 4
 
 //Pins
-#define BUTTON1_PIN 4
+#define BUTTON1_PIN 2 //this pin is compatible with interrupts
 #define BUTTON2_PIN 5
 #define BUTTON3_PIN 6
 #define BUTTON4_PIN 7
@@ -140,14 +141,14 @@ void setup1() {
 void setup2() {
   //if the timer this time around has fully elapsed then go into deep sleep
   if (timeWindowElapsed) {
-    //sleep
+    sleepNow();
   } else {
     int potentiometerValue = analogRead(POTENTIOMETER_PIN);
     difficulty = mapToDifficulty(potentiometerValue);
     currentMaxTime = MAX_TIME_WINDOW - TIME_DELTA * difficulty;
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Difficulty: X Turn Time: Y");
+    lcd.print("Difficulty:" + String(difficulty));
     lcd.setCursor(0,1);
     lcd.print("Press B1 to Start");
     if (redLedBrightness < 0 || redLedBrightness > 255) {
@@ -266,6 +267,15 @@ void timerISR() {
   Timer1.stop();
 }
 
-void wake() {
+void wakeUp() {
   state = SETUP1;
+}
+
+void sleepNow() {
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, LOW);
+  sleep_mode();
+  sleep_disable();
+  detachInterrupt(digitalPinToInterrupt(BUTTON1_PIN));
 }
