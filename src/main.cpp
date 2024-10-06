@@ -3,6 +3,12 @@
 #include <time.h>
 #include <LiquidCrystal_I2C.h>
 
+/*
+  Give Me The Binary!
+  Reference circuit https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
+*/
+
+//States
 #define SETUP1 1
 #define SETUP2 2
 #define GAMING1 3
@@ -10,14 +16,25 @@
 #define GAMING3 5
 #define GAMING4 6
 
-#define RED_LED_PIN 11
+//Pins
+#define BUTTON1_PIN 4
+#define BUTTON2_PIN 5
+#define BUTTON3_PIN 6
+#define BUTTON4_PIN 7
+
+#define GREEN_LED1_PIN 10
+#define GREEN_LED2_PIN 12
+#define GREEN_LED3_PIN 13
+#define GREEN_LED4_PIN 14
+
+#define RED_LED_PIN 9 //PWM
 #define POTENTIOMETER_PIN A0
 
-#define RED_LED_BRIGHTNESS_STEP 5
-
+//Game constants
 #define MAX_RANDOM 15
 #define TIME_DELTA 0.5
 #define MAX_TIME_WINDOW 10
+#define RED_LED_BRIGHTNESS_STEP 5
 
 int state;
 int difficulty;
