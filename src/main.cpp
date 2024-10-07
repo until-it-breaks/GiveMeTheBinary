@@ -28,9 +28,9 @@
 #define BUTTON4_PIN 7
 
 #define GREEN_LED1_PIN 10
-#define GREEN_LED2_PIN 12
-#define GREEN_LED3_PIN 13
-#define GREEN_LED4_PIN 14
+#define GREEN_LED2_PIN 11
+#define GREEN_LED3_PIN 12
+#define GREEN_LED4_PIN 13
 
 #define RED_LED_PIN 9 //PWM
 #define POTENTIOMETER_PIN A0
@@ -39,7 +39,7 @@
 #define MAX_RANDOM 15
 #define TIME_DELTA 0.5
 #define MAX_TIME_WINDOW 10
-#define RED_LED_BRIGHTNESS_STEP 5
+#define RED_LED_BRIGHTNESS_STEP 1
 
 //Difficulties
 #define VERY_EASY 0
@@ -120,29 +120,24 @@ void setup() {
 }
 
 void loop() {
+  //Serial.println("Current state: " + String(state));
   switch (state) {
   case STATE_SETUP_1:
-    Serial.println("Game State: SETUP1");
     setupTask1();
     break;
   case STATE_SETUP_2:
-    Serial.println("Game State: SETUP2");
     setupTask2();
     break;
   case STATE_GAMING_1:
-    Serial.println("Game State: GAMING1");
     gamingTask1();
     break;
   case STATE_GAMING_2:
-    Serial.println("Game State: GAMING2");
     gamingTask2();
     break;
   case STATE_GAMING_3:
-    Serial.println("Game State: GAMING3");
     gamingTask3();
     break;
   case STATE_GAMING_4:
-    Serial.println("Game State: GAMING4");
     gamingTask4();
     break;
   default:
@@ -160,7 +155,7 @@ void setupTask1() {
   delay(1000);
   //start timer and transition to next state
   state = STATE_SETUP_2;
-  startTimer(1000000);
+  //startTimer(5000000);
 }
 
 void setupTask2() {
@@ -169,13 +164,17 @@ void setupTask2() {
     sleepNow();
   } else {
     int potentiometerValue = analogRead(POTENTIOMETER_PIN);
-    difficulty = mapToDifficulty(potentiometerValue);
-    currentMaxTime = MAX_TIME_WINDOW - TIME_DELTA * difficulty;
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Difficulty:" + String(difficulty));
-    lcd.setCursor(0,1);
-    lcd.print("Press B1 to Start");
+    int newDifficulty = mapToDifficulty(potentiometerValue);
+    if (difficulty != newDifficulty) {
+      difficulty = newDifficulty;
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Difficulty: " + String(difficulty));
+      lcd.setCursor(0,1);
+      lcd.print("Press B1 to start");
+      currentMaxTime = MAX_TIME_WINDOW - TIME_DELTA * difficulty;
+    }
+
     if (redLedBrightness < 0 || redLedBrightness > 255) {
       redLedBrightnessStep = -redLedBrightnessStep;
     }
@@ -190,20 +189,23 @@ void setupTask2() {
 }
 
 void gamingTask1() {
+  lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Go!");
   delay(1000);
   currentRandomValue = rand() % MAX_RANDOM + 1;
+  lcd.setCursor(0,1);
+  lcd.print("Value: " + String(currentRandomValue));
   //start timer and transition to the next state.
   state = STATE_GAMING_2;
-  startTimer(currentMaxTime * 1000000);
+  //startTimer(currentMaxTime * 1000000);
 }
 
 void gamingTask2() {
   if (timeWindowElapsed) {
     state = STATE_GAMING_4;
   } else {
-    for (size_t i = 0; i < BUTTON_COUNT - 1; i++)
+    for (size_t i = 0; i < BUTTON_COUNT; i++)
       {
         if(digitalRead(buttons[i]) == HIGH) {
           digitalWrite(leds[i], HIGH);
@@ -214,7 +216,7 @@ void gamingTask2() {
         }
       }
       int sum = 0;
-      for (size_t i = 0; i < LED_COUNT - 1; i++)
+      for (size_t i = 0; i < LED_COUNT       ; i++)
       {
         if (ledStates[i] == true) {
           switch (i) {
