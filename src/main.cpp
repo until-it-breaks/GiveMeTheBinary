@@ -11,12 +11,12 @@
 */
 
 //States
-#define SETUP1 1
-#define SETUP2 2
-#define GAMING1 3
-#define GAMING2 4
-#define GAMING3 5
-#define GAMING4 6
+#define STATE_SETUP_1 1
+#define STATE_SETUP_2 2
+#define STATE_GAMING_1 3
+#define STATE_GAMING_2 4
+#define STATE_GAMING_3 5
+#define STATE_GAMING_4 6
 
 #define LED_COUNT 4
 #define BUTTON_COUNT 4
@@ -65,10 +65,23 @@ int buttons[BUTTON_COUNT];
 
 bool timeWindowElapsed;
 
+void setupTask1();
+void setupTask2();
+void gamingTask1();
+void gamingTask2();
+void gamingTask3();
+void gamingTask4();
+int mapToDifficulty(int value);
+void startTimer(unsigned long seconds);
+void timerISR();
+void wakeUp();
+void sleepNow();
+
 LiquidCrystal_I2C lcd(0x27, 16, 2); // 0x27 is the address for most I2C LCD displays
 
 void setup() {
   srand(time(NULL));
+  Serial.begin(9600);
   redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
   
   leds[0] = GREEN_LED1_PIN;
@@ -103,35 +116,41 @@ void setup() {
   lcd.backlight();
 
   timeWindowElapsed = false;
-  state = SETUP1;
+  state = STATE_SETUP_1;
 }
 
 void loop() {
   switch (state) {
-  case SETUP1:
-    setup1();
+  case STATE_SETUP_1:
+    Serial.println("Game State: SETUP1");
+    setupTask1();
     break;
-  case SETUP2:
-    setup2();
+  case STATE_SETUP_2:
+    Serial.println("Game State: SETUP2");
+    setupTask2();
     break;
-  case GAMING1:
-    gaming1();
+  case STATE_GAMING_1:
+    Serial.println("Game State: GAMING1");
+    gamingTask1();
     break;
-  case GAMING2:
-    gaming2();
+  case STATE_GAMING_2:
+    Serial.println("Game State: GAMING2");
+    gamingTask2();
     break;
-  case GAMING3:
-    gaming3();
+  case STATE_GAMING_3:
+    Serial.println("Game State: GAMING3");
+    gamingTask3();
     break;
-  case GAMING4:
-    gaming4();
+  case STATE_GAMING_4:
+    Serial.println("Game State: GAMING4");
+    gamingTask4();
     break;
   default:
     break;
   }
 }
 
-void setup1() {
+void setupTask1() {
   score = 0;
   difficulty = VERY_EASY;
   currentMaxTime = MAX_TIME_WINDOW;
@@ -140,11 +159,11 @@ void setup1() {
   lcd.print("Welcome to GMB!");
   delay(1000);
   //start timer and transition to next state
-  state = SETUP2;
+  state = STATE_SETUP_2;
   startTimer(1000000);
 }
 
-void setup2() {
+void setupTask2() {
   //if the timer this time around has fully elapsed then go into deep sleep
   if (timeWindowElapsed) {
     sleepNow();
@@ -165,24 +184,24 @@ void setup2() {
     
     //if b1 is pressed in time go to next state
     if (digitalRead(buttons[0]) == HIGH) {
-      state = GAMING1;
+      state = STATE_GAMING_1;
     }
   }
 }
 
-void gaming1() {
+void gamingTask1() {
   lcd.setCursor(0,0);
   lcd.print("Go!");
   delay(1000);
   currentRandomValue = rand() % MAX_RANDOM + 1;
   //start timer and transition to the next state.
-  state = GAMING2;
+  state = STATE_GAMING_2;
   startTimer(currentMaxTime * 1000000);
 }
 
-void gaming2() {
+void gamingTask2() {
   if (timeWindowElapsed) {
-    state = GAMING4;
+    state = STATE_GAMING_4;
   } else {
     for (size_t i = 0; i < BUTTON_COUNT - 1; i++)
       {
@@ -217,13 +236,13 @@ void gaming2() {
           }
         }
       if (sum == currentRandomValue) {
-          state = GAMING3;
+          state = STATE_GAMING_3;
       }
     }
   } 
 }
 
-void gaming3() {
+void gamingTask3() {
   score++;
   currentMaxTime = currentMaxTime - TIME_DELTA;
   lcd.clear();
@@ -232,10 +251,10 @@ void gaming3() {
   lcd.setCursor(0,1);
   lcd.print("Score " + String(score));
   delay(2000);
-  state = GAMING1;
+  state = STATE_GAMING_1;
 }
 
-void gaming4() {
+void gamingTask4() {
   lcd.clear();
   digitalWrite(RED_LED_PIN, HIGH);
   delay(1000);
@@ -245,7 +264,7 @@ void gaming4() {
   lcd.setCursor(0,1);
   lcd.print("Score " + String(score));
   delay(10000);
-  state = SETUP1;
+  state = STATE_SETUP_1;
 }
 
 int mapToDifficulty(int value) {
@@ -274,7 +293,7 @@ void timerISR() {
 }
 
 void wakeUp() {
-  state = SETUP1;
+  state = STATE_SETUP_1;
 }
 
 void sleepNow() {
