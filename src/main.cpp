@@ -38,7 +38,7 @@ enum GameState {
 };
 
 // Game variables
-GameState state;
+GameState gameState;
 Difficulty difficulty;
 int score;
 int currentRandomValue;
@@ -94,11 +94,11 @@ void setup() {
     lcd.init();
     lcd.backlight();
 
-    state = STATE_SETUP_1;
+    gameState = STATE_SETUP_1;
 }
 
 void loop() {
-    switch (state) {
+    switch (gameState) {
     case STATE_SETUP_1:
         setupGame();
         break;
@@ -140,7 +140,7 @@ void setupGame() {
 
     previousMillis = millis();
     timerInterval = 10000; // 10 seconds
-    state = STATE_SETUP_2;
+    gameState = STATE_SETUP_2;
 }
 
 void updateDifficulty() {
@@ -168,7 +168,7 @@ void updateDifficulty() {
 
         if (digitalRead(buttons[0]) == HIGH) {
             digitalWrite(RED_LED_PIN, LOW);
-            state = STATE_GAMING_1;
+            gameState = STATE_GAMING_1;
         }
     }
 }
@@ -183,12 +183,12 @@ void gameStart() {
     lcd.print("Value: " + String(currentRandomValue));
     previousMillis = millis();
     timerInterval = currentMaxTime;
-    state = STATE_GAMING_2;
+    gameState = STATE_GAMING_2;
 }
 
 void processGame() {
     if (timeWindowElapsed) {
-        state = STATE_GAMING_4;
+        gameState = STATE_GAMING_4;
     } else {
         unsigned long currentMillis = millis();
         if (currentMillis - previousMillis >= timerInterval) {
@@ -221,7 +221,7 @@ void processGame() {
         }
       }
       if (sum == currentRandomValue) {
-          state = STATE_GAMING_3;
+          gameState = STATE_GAMING_3;
       }
     }
 }
@@ -235,7 +235,7 @@ void checkGameOutcome() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(2000);
-    state = STATE_GAMING_1;
+    gameState = STATE_GAMING_1;
 }
 
 void showGameOver() {
@@ -248,7 +248,7 @@ void showGameOver() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(10000);
-    state = STATE_SETUP_1;
+    gameState = STATE_SETUP_1;
 }
 
 void updateLEDs() {
@@ -273,14 +273,14 @@ void manageRedLED() {
 
 void enterSleepMode() {
     lcd.noBacklight();
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_enable();
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // set the sleep mode
+    sleep_enable();                         // removes the safety pin
     enableInterrupt(BUTTON1_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON2_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON3_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON4_PIN, wakeUp, HIGH);
-    sleep_mode(); //Actually goes to sleep
-    sleep_disable();
+    sleep_mode();                           // put to sleep here
+    sleep_disable();                        // enables all function
     disableInterrupt(BUTTON1_PIN);
     disableInterrupt(BUTTON2_PIN);
     disableInterrupt(BUTTON3_PIN);
@@ -289,5 +289,5 @@ void enterSleepMode() {
 }
 
 void wakeUp() {
-    state = STATE_SETUP_1;
+    gameState = STATE_SETUP_1;
 }
