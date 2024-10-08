@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <stdlib.h>
-#include <time.h>
 #include <LiquidCrystal_I2C.h>
 #include <avr/sleep.h>
 
@@ -23,6 +21,7 @@
 #define GREEN_LED4_PIN 13
 #define RED_LED_PIN 9
 #define POTENTIOMETER_PIN A0
+#define UNCONNECTED_ANALOG_PIN A3
 
 // Difficulty Levels
 enum Difficulty { VERY_EASY, EASY, NORMAL, HARD };
@@ -75,7 +74,7 @@ void enterSleepMode();
 void wakeUp();
 
 void setup() {
-    srand(time(NULL));
+    randomSeed(analogRead(UNCONNECTED_ANALOG_PIN));
     Serial.begin(9600);
     redLedBrightness = 0;
     redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
@@ -178,7 +177,7 @@ void gameStart() {
     lcd.setCursor(0, 0);
     lcd.print("Go!");
     delay(1000);
-    currentRandomValue = rand() % MAX_RANDOM + 1;
+    currentRandomValue = random(0, MAX_RANDOM + 1);
     lcd.setCursor(0, 1);
     lcd.print("Value: " + String(currentRandomValue));
     previousMillis = millis();
