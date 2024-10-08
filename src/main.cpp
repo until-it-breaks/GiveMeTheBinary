@@ -275,10 +275,16 @@ void enterSleepMode() {
     lcd.noBacklight();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     sleep_enable();
-    //attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, HIGH); // When B1 is pressed
-    sleep_mode();
+    enableInterrupt(BUTTON1_PIN, wakeUp, HIGH);
+    enableInterrupt(BUTTON2_PIN, wakeUp, HIGH);
+    enableInterrupt(BUTTON3_PIN, wakeUp, HIGH);
+    enableInterrupt(BUTTON4_PIN, wakeUp, HIGH);
+    sleep_mode(); //Actually goes to sleep
     sleep_disable();
-    //detachInterrupt(digitalPinToInterrupt(BUTTON1_PIN));
+    disableInterrupt(BUTTON1_PIN);
+    disableInterrupt(BUTTON2_PIN);
+    disableInterrupt(BUTTON3_PIN);
+    disableInterrupt(BUTTON4_PIN);
     lcd.backlight();
 }
 
