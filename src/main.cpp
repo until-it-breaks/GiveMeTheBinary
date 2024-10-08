@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <avr/sleep.h>
+#include <EnableInterrupt.h>
 
 // Constants
 #define LED_COUNT 4
@@ -11,7 +12,7 @@
 #define RED_LED_BRIGHTNESS_STEP 1
 
 // Pins
-#define BUTTON1_PIN 2
+#define BUTTON1_PIN 4
 #define BUTTON2_PIN 5
 #define BUTTON3_PIN 6
 #define BUTTON4_PIN 7
@@ -274,10 +275,10 @@ void enterSleepMode() {
     lcd.noBacklight();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     sleep_enable();
-    attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, HIGH); // When B1 is pressed
+    //attachInterrupt(digitalPinToInterrupt(BUTTON1_PIN), wakeUp, HIGH); // When B1 is pressed
     sleep_mode();
     sleep_disable();
-    detachInterrupt(digitalPinToInterrupt(BUTTON1_PIN));
+    //detachInterrupt(digitalPinToInterrupt(BUTTON1_PIN));
     lcd.backlight();
 }
 
