@@ -10,6 +10,7 @@
 #define MAX_TIME_WINDOW 15000 //Max time window to light up the correct leds
 #define TIME_DELTA 0.5
 #define RED_LED_BRIGHTNESS_STEP 1
+#define GAME_OVER_LENGTH 10000 //Milliseconds
 
 // Pins
 #define BUTTON1_PIN 4
@@ -29,12 +30,12 @@ enum Difficulty { VERY_EASY, EASY, NORMAL, HARD };
 
 // Game States
 enum GameState {
-    STATE_SETUP_1,
-    STATE_SETUP_2,
-    STATE_GAMING_1,
-    STATE_GAMING_2,
-    STATE_GAMING_3,
-    STATE_GAMING_4
+    STATE_WELCOME,
+    STATE_SETTINGS,
+    STATE_GAME_SETUP,
+    STATE_GAME_PROCESS,
+    STATE_ROUND_RESOLUTION,
+    STATE_GAME_OVER
 };
 
 // Game variables
@@ -66,7 +67,7 @@ void setupGame();
 void updateDifficulty();
 void gameStart();
 void processGame();
-void checkGameOutcome();
+void roundResolution();
 void showGameOver();
 int readButtons();
 void updateLEDs();
@@ -94,27 +95,27 @@ void setup() {
     lcd.init();
     lcd.backlight();
 
-    gameState = STATE_SETUP_1;
+    gameState = STATE_WELCOME;
 }
 
 void loop() {
     switch (gameState) {
-    case STATE_SETUP_1:
+    case STATE_WELCOME:
         setupGame();
         break;
-    case STATE_SETUP_2:
+    case STATE_SETTINGS:
         updateDifficulty();
         break;
-    case STATE_GAMING_1:
+    case STATE_GAME_SETUP:
         gameStart();
         break;
-    case STATE_GAMING_2:
+    case STATE_GAME_PROCESS:
         processGame();
         break;
-    case STATE_GAMING_3:
-        checkGameOutcome();
+    case STATE_ROUND_RESOLUTION:
+        roundResolution();
         break;
-    case STATE_GAMING_4:
+    case STATE_GAME_OVER:
         showGameOver();
         break;
     default:
@@ -140,7 +141,7 @@ void setupGame() {
 
     previousMillis = millis();
     timerInterval = 10000; // 10 seconds
-    gameState = STATE_SETUP_2;
+    gameState = STATE_SETTINGS;
 }
 
 void updateDifficulty() {
@@ -168,7 +169,7 @@ void updateDifficulty() {
 
         if (digitalRead(buttons[0]) == HIGH) {
             digitalWrite(RED_LED_PIN, LOW);
-            gameState = STATE_GAMING_1;
+            gameState = STATE_GAME_SETUP;
         }
     }
 }
@@ -183,12 +184,12 @@ void gameStart() {
     lcd.print("Value: " + String(currentRandomValue));
     previousMillis = millis();
     timerInterval = currentMaxTime;
-    gameState = STATE_GAMING_2;
+    gameState = STATE_GAME_PROCESS;
 }
 
 void processGame() {
     if (timeWindowElapsed) {
-        gameState = STATE_GAMING_4;
+        gameState = STATE_GAME_OVER;
     } else {
         unsigned long currentMillis = millis();
         if (currentMillis - previousMillis >= timerInterval) {
@@ -221,12 +222,12 @@ void processGame() {
         }
       }
       if (sum == currentRandomValue) {
-          gameState = STATE_GAMING_3;
+          gameState = STATE_ROUND_RESOLUTION;
       }
     }
 }
 
-void checkGameOutcome() {
+void roundResolution() {
     score++;
     currentMaxTime = currentMaxTime - TIME_DELTA;
     lcd.clear();
@@ -235,7 +236,7 @@ void checkGameOutcome() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(2000);
-    gameState = STATE_GAMING_1;
+    gameState = STATE_GAME_SETUP;
 }
 
 void showGameOver() {
@@ -247,8 +248,8 @@ void showGameOver() {
     lcd.print("Game Over!");
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
-    delay(10000);
-    gameState = STATE_SETUP_1;
+    delay(GAME_OVER_LENGTH);
+    gameState = STATE_WELCOME;
 }
 
 void updateLEDs() {
@@ -289,5 +290,5 @@ void enterSleepMode() {
 }
 
 void wakeUp() {
-    gameState = STATE_SETUP_1;
+    gameState = STATE_WELCOME;
 }
