@@ -3,8 +3,6 @@
 #include <avr/sleep.h>
 #include <EnableInterrupt.h>
 
-//TODO Improve Red LED fade, process game inputs, disable rogue red LED
-
 /**
  * A simple binary numbers game for the Arduino Uno R3
  * Circuit reference: https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
@@ -14,28 +12,26 @@
 #define LED_COUNT 4
 #define BUTTON_COUNT 4
 #define MAX_RANDOM 15
-#define RED_LED_BRIGHTNESS_STEP 1
+#define RED_LED_BRIGHTNESS_STEP 5
 #define VERY_EASY 1
 #define EASY 2
 #define NORMAL 3
 #define HARD 4
 
 // Time windows in milliseconds
-#define INITIALIZATION_DELAY 5000
+#define INITIALIZATION_DELAY 2000
 #define GAME_OVER_DELAY 10000
-#define SET_DIFFICULTY_WINDOW 10000
+#define SET_DIFFICULTY_TIME_WINDOW 10000
 #define ROUND_SETUP_DELAY 1000
 #define ROUND_RESOLUTION_DELAY 2000
 #define ROUND_MAX_TIME_WINDOW 15000
 #define ROUND_MIN_TIME_WINDOW 3000
 #define ROUND_TIME_DELTA 1000
-#define RED_LIGHT_DELAY 1000
+#define RED_LED_DELAY 1000
+#define RED_LED_FADE_DELAY 30
 
 // Pins
-/**
- * Pin 4, 5, 6, 7 are capable of interrupts thanks to EnableInterrupt
- **/ 
-#define BUTTON1_PIN 4
+#define BUTTON1_PIN 4               //Pin 4, 5, 6, 7 are interrupt capable thanks to EnableInterrupt
 #define BUTTON2_PIN 5
 #define BUTTON3_PIN 6
 #define BUTTON4_PIN 7
@@ -63,21 +59,25 @@ int difficulty;
 int score;
 int currentRandomValue;
 int currentMaxTime;
-bool timeWindowHasElapsed;
 
 // Red LED variables
 int redLedBrightness;
 int redLedBrightnessStep;
+unsigned long previousFadeMillis; 
+
+// Timing variables
+unsigned long previousMillis;
+unsigned long timerInterval;
+bool timeWindowHasElapsed;
 
 // Arrays
 int leds[LED_COUNT] = { GREEN_LED1_PIN, GREEN_LED2_PIN, GREEN_LED3_PIN, GREEN_LED4_PIN };
 int buttons[BUTTON_COUNT] = { BUTTON1_PIN, BUTTON2_PIN, BUTTON3_PIN, BUTTON4_PIN };
 
-// Timing variables
-unsigned long previousMillis;
-unsigned long timerInterval;
-
 LiquidCrystal_I2C lcd(0x27, 16, 2); // 0x27 is the most common address for I2C LCDs
+
+
+// Prototypes
 
 // One time setup instructions
 void setup();
@@ -114,6 +114,9 @@ void enterSleepMode();
 
 // Instructions to be executed upon wake
 void wakeUp();
+
+// Turns off all LEDs;
+void turnOffLEDs();
 
 // Maps input value to the corresponding difficulty
 int getDifficulty(int value);
@@ -162,13 +165,14 @@ void initializeGame() {
     // Resets game variables
     redLedBrightness = 0;
     redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
+    previousFadeMillis = 0;
     score = 0;
     difficulty = VERY_EASY;
     currentMaxTime = ROUND_MAX_TIME_WINDOW;
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Welcome to GMB!");
-    delay(1000);
+    delay(INITIALIZATION_DELAY);
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Choose the");
@@ -177,7 +181,7 @@ void initializeGame() {
     delay(INITIALIZATION_DELAY);
     // Sets up time window for difficulty setup
     gameState = STATE_SETTINGS;
-    timerInterval = SET_DIFFICULTY_WINDOW;
+    timerInterval = SET_DIFFICULTY_TIME_WINDOW;
     timeWindowHasElapsed = false;
     previousMillis = millis();
 }
@@ -191,7 +195,6 @@ void setupDifficulty() {
         if (currentMillis - previousMillis >= timerInterval) {
             timeWindowHasElapsed = true;
         }
-
         int potentiometerValue = analogRead(POTENTIOMETER_PIN);
         int newDifficulty = getDifficulty(potentiometerValue);
         if (difficulty != newDifficulty) {
@@ -202,9 +205,7 @@ void setupDifficulty() {
             lcd.setCursor(0, 1);
             lcd.print("Tap B1 to start");
         }
-
         fadeRedLED();
-
         if (digitalRead(buttons[0]) == HIGH) {
             digitalWrite(RED_LED_PIN, LOW);
             gameState = STATE_ROUND_SETUP;
@@ -215,12 +216,12 @@ void setupDifficulty() {
 void setupRound() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Go! Time: " + String(currentMaxTime/1000) + "s ");
+    lcd.print("Go! Time: " + String(currentMaxTime/1000) + "s");
     currentRandomValue = random(0, MAX_RANDOM + 1);
     lcd.setCursor(0, 1);
-    lcd.print("Value: " + String(currentRandomValue));
+    lcd.print("Value: [" + String(currentRandomValue) + "]");
     delay(ROUND_SETUP_DELAY);
-    // Sets up the time window for the round
+    // Sets up the time window for the upcoming round
     gameState = STATE_PROCESS_GAME;
     timerInterval = currentMaxTime;
     previousMillis = millis();
@@ -235,6 +236,7 @@ void processGame() {
             timeWindowHasElapsed = true;
         }
         updateLEDs();
+        // This next section could be optimized
         int sum = 0;
         for (int i = 0; i < LED_COUNT; i++)
         {
@@ -266,6 +268,7 @@ void processGame() {
 
 void resolveRound() {
     score++;
+    // The time window decreases each successful round by an amount multiplied by the difficulty scale
     if (currentMaxTime - (ROUND_TIME_DELTA * difficulty) >= ROUND_MIN_TIME_WINDOW) {
         currentMaxTime -= ROUND_TIME_DELTA * difficulty;
     }
@@ -275,13 +278,15 @@ void resolveRound() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(ROUND_RESOLUTION_DELAY);
+    turnOffLEDs();
     gameState = STATE_ROUND_SETUP;
 }
 
 void showGameOver() {
     digitalWrite(RED_LED_PIN, HIGH);
-    delay(RED_LIGHT_DELAY);
+    delay(RED_LED_DELAY);
     digitalWrite(RED_LED_PIN, LOW);
+    turnOffLEDs();
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Game Over!");
@@ -301,24 +306,35 @@ void updateLEDs() {
     }
 }
 
+void turnOffLEDs() {
+    for (int i = 0; i < LED_COUNT; i++) {
+        digitalWrite(leds[i], LOW);
+    }
+}
+
 void fadeRedLED() {
-    analogWrite(RED_LED_PIN, redLedBrightness);
-    redLedBrightness += redLedBrightnessStep;
-    if (redLedBrightness <= 0 || redLedBrightness >= 255) {
-        redLedBrightnessStep = -redLedBrightnessStep;
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousFadeMillis >= RED_LED_FADE_DELAY) {
+        previousFadeMillis = currentMillis;
+        // Possible edge case where the an out of bound value is written
+        analogWrite(RED_LED_PIN, redLedBrightness);
+        redLedBrightness += redLedBrightnessStep;
+        if (redLedBrightness <= 0 || redLedBrightness >= 255) {
+            redLedBrightnessStep = -redLedBrightnessStep;
+        }
     }
 }
 
 void enterSleepMode() {
     lcd.noBacklight();
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // set the sleep mode
-    sleep_enable();                         // removes the safety pin
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);        // Sets the sleep mode
+    sleep_enable();                             // Removes the safety pin
     enableInterrupt(BUTTON1_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON2_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON3_PIN, wakeUp, HIGH);
     enableInterrupt(BUTTON4_PIN, wakeUp, HIGH);
-    sleep_mode();                           // put to sleep here
-    sleep_disable();                        // enables all function
+    sleep_mode();                               // Actually put to sleep here
+    sleep_disable();                            // Re-enables all functions
     disableInterrupt(BUTTON1_PIN);
     disableInterrupt(BUTTON2_PIN);
     disableInterrupt(BUTTON3_PIN);
