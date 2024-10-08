@@ -14,16 +14,21 @@
 #define LED_COUNT 4
 #define BUTTON_COUNT 4
 #define MAX_RANDOM 15
-#define TIME_DELTA 0.5
 #define RED_LED_BRIGHTNESS_STEP 1
+#define VERY_EASY 1
+#define EASY 2
+#define NORMAL 3
+#define HARD 4
 
 // Time windows in milliseconds
 #define INITIALIZATION_DELAY 5000
 #define GAME_OVER_DELAY 10000
 #define SET_DIFFICULTY_WINDOW 10000
+#define ROUND_SETUP_DELAY 1000
 #define ROUND_TIME_WINDOW 15000
 #define ROUND_RESOLUTION_DELAY 2000
 #define RED_LIGHT_DELAY 1000
+#define TIME_DELTA 500
 
 // Pins
 #define BUTTON1_PIN 4
@@ -38,9 +43,6 @@
 #define POTENTIOMETER_PIN A0
 #define UNCONNECTED_ANALOG_PIN A3
 
-// Difficulty Levels
-enum Difficulty { VERY_EASY, EASY, NORMAL, HARD };
-
 // Game States
 enum GameState {
     STATE_INITIALIZE,
@@ -53,7 +55,7 @@ enum GameState {
 
 // Game variables
 GameState gameState;
-Difficulty difficulty;
+int difficulty;
 int score;
 int currentRandomValue;
 int currentMaxTime;
@@ -108,6 +110,9 @@ void enterSleepMode();
 
 // Instructions to be executed upon wake
 void wakeUp();
+
+// Maps input value to the corresponding difficulty
+int getDifficulty(int value);
 
 void setup() {
     randomSeed(analogRead(UNCONNECTED_ANALOG_PIN));
@@ -188,9 +193,9 @@ void setupDifficulty() {
         }
 
         int potentiometerValue = analogRead(POTENTIOMETER_PIN);
-        int newDifficulty = map(potentiometerValue, 0, 1023, 0, 3);
+        int newDifficulty = getDifficulty(potentiometerValue);
         if (difficulty != newDifficulty) {
-            difficulty = static_cast<Difficulty>(newDifficulty);
+            difficulty = newDifficulty;
             lcd.clear();
             lcd.setCursor(0, 0);
             lcd.print("Difficulty: " + String(difficulty));
@@ -211,10 +216,11 @@ void setupDifficulty() {
 void setupRound() {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Go!");
+    lcd.print("Go! Time: " + String(currentMaxTime/1000) + "s ");
     currentRandomValue = random(0, MAX_RANDOM + 1);
     lcd.setCursor(0, 1);
     lcd.print("Value: " + String(currentRandomValue));
+    delay(ROUND_SETUP_DELAY);
     // Sets up the time window for the round
     gameState = STATE_PROCESS_GAME;
     timerInterval = currentMaxTime;
@@ -321,4 +327,16 @@ void enterSleepMode() {
 
 void wakeUp() {
     gameState = STATE_INITIALIZE;
+}
+
+int getDifficulty(int value) {
+    if (value <= 255) {
+        return VERY_EASY;
+    } else if (value <= 511) {
+        return EASY;
+    } else if (value <= 767) {
+        return NORMAL;
+    } else {
+        return HARD;
+    }
 }
