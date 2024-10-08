@@ -30,10 +30,10 @@ enum Difficulty { VERY_EASY, EASY, NORMAL, HARD };
 
 // Game States
 enum GameState {
-    STATE_WELCOME,
+    STATE_INITIALIZE,
     STATE_SETTINGS,
-    STATE_GAME_SETUP,
-    STATE_GAME_PROCESS,
+    STATE_ROUND_SETUP,
+    STATE_PROCESS_GAME,
     STATE_ROUND_RESOLUTION,
     STATE_GAME_OVER
 };
@@ -63,9 +63,9 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD initialization
 
 void setup();
 void loop();
-void setupGame();
-void updateDifficulty();
-void gameStart();
+void initializeGame();
+void setupDifficulty();
+void setupRound();
 void processGame();
 void roundResolution();
 void showGameOver();
@@ -95,21 +95,21 @@ void setup() {
     lcd.init();
     lcd.backlight();
 
-    gameState = STATE_WELCOME;
+    gameState = STATE_INITIALIZE;
 }
 
 void loop() {
     switch (gameState) {
-    case STATE_WELCOME:
-        setupGame();
+    case STATE_INITIALIZE:
+        initializeGame();
         break;
     case STATE_SETTINGS:
-        updateDifficulty();
+        setupDifficulty();
         break;
-    case STATE_GAME_SETUP:
-        gameStart();
+    case STATE_ROUND_SETUP:
+        setupRound();
         break;
-    case STATE_GAME_PROCESS:
+    case STATE_PROCESS_GAME:
         processGame();
         break;
     case STATE_ROUND_RESOLUTION:
@@ -123,7 +123,7 @@ void loop() {
     }
 }
 
-void setupGame() {
+void initializeGame() {
     score = 0;
     difficulty = VERY_EASY;
     currentMaxTime = MAX_TIME_WINDOW;
@@ -144,7 +144,7 @@ void setupGame() {
     gameState = STATE_SETTINGS;
 }
 
-void updateDifficulty() {
+void setupDifficulty() {
     if (timeWindowElapsed) {
         enterSleepMode();
     } else {
@@ -169,12 +169,12 @@ void updateDifficulty() {
 
         if (digitalRead(buttons[0]) == HIGH) {
             digitalWrite(RED_LED_PIN, LOW);
-            gameState = STATE_GAME_SETUP;
+            gameState = STATE_ROUND_SETUP;
         }
     }
 }
 
-void gameStart() {
+void setupRound() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Go!");
@@ -184,7 +184,7 @@ void gameStart() {
     lcd.print("Value: " + String(currentRandomValue));
     previousMillis = millis();
     timerInterval = currentMaxTime;
-    gameState = STATE_GAME_PROCESS;
+    gameState = STATE_PROCESS_GAME;
 }
 
 void processGame() {
@@ -236,7 +236,7 @@ void roundResolution() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(2000);
-    gameState = STATE_GAME_SETUP;
+    gameState = STATE_ROUND_SETUP;
 }
 
 void showGameOver() {
@@ -249,7 +249,7 @@ void showGameOver() {
     lcd.setCursor(0, 1);
     lcd.print("Score: " + String(score));
     delay(GAME_OVER_LENGTH);
-    gameState = STATE_WELCOME;
+    gameState = STATE_INITIALIZE;
 }
 
 void updateLEDs() {
@@ -290,5 +290,5 @@ void enterSleepMode() {
 }
 
 void wakeUp() {
-    gameState = STATE_WELCOME;
+    gameState = STATE_INITIALIZE;
 }
