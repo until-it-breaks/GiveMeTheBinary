@@ -8,7 +8,7 @@
 /**
  * A simple binary numbers game for the Arduino Uno R3
  * Circuit reference: https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
- */
+ **/
 
 // Constants
 #define LED_COUNT 4
@@ -31,9 +31,10 @@
 #define ROUND_TIME_DELTA 1000
 #define RED_LIGHT_DELAY 1000
 
-
 // Pins
-// Pin 4, 5, 6, 7 are capable of interrupts thanks to EnableInterrupt
+/**
+ * Pin 4, 5, 6, 7 are capable of interrupts thanks to EnableInterrupt
+ **/ 
 #define BUTTON1_PIN 4
 #define BUTTON2_PIN 5
 #define BUTTON3_PIN 6
@@ -44,7 +45,7 @@
 #define GREEN_LED4_PIN 13
 #define RED_LED_PIN 9               // Must be a PWM capable pin
 #define POTENTIOMETER_PIN A0
-#define UNCONNECTED_ANALOG_PIN A3   // Must be free for better randomness
+#define UNCONNECTED_ANALOG_PIN A3   // Must be unused for better randomness
 
 // Game States
 enum GameState {
@@ -106,7 +107,7 @@ void showGameOver();
 void updateLEDs();
 
 // Fades the red LED
-void manageRedLED();
+void fadeRedLED();
 
 // Puts the device to sleep
 void enterSleepMode();
@@ -119,21 +120,16 @@ int getDifficulty(int value);
 
 void setup() {
     randomSeed(analogRead(UNCONNECTED_ANALOG_PIN));
-
     for (int i = 0; i < LED_COUNT; i++) {
         pinMode(leds[i], OUTPUT);
     }
-
     for (int i = 0; i < BUTTON_COUNT; i++) {
         pinMode(buttons[i], INPUT);
     }
-
     pinMode(RED_LED_PIN, OUTPUT);
     pinMode(POTENTIOMETER_PIN, INPUT);
-
     lcd.init();
     lcd.backlight();
-
     gameState = STATE_INITIALIZE;
 }
 
@@ -188,6 +184,7 @@ void initializeGame() {
 
 void setupDifficulty() {
     if (timeWindowHasElapsed) {
+        digitalWrite(RED_LED_PIN, LOW);
         enterSleepMode();
     } else {
         unsigned long currentMillis = millis();
@@ -206,7 +203,7 @@ void setupDifficulty() {
             lcd.print("Tap B1 to start");
         }
 
-        manageRedLED();
+        fadeRedLED();
 
         if (digitalRead(buttons[0]) == HIGH) {
             digitalWrite(RED_LED_PIN, LOW);
@@ -304,7 +301,7 @@ void updateLEDs() {
     }
 }
 
-void manageRedLED() {
+void fadeRedLED() {
     analogWrite(RED_LED_PIN, redLedBrightness);
     redLedBrightness += redLedBrightnessStep;
     if (redLedBrightness <= 0 || redLedBrightness >= 255) {
