@@ -3,7 +3,7 @@
 #include <avr/sleep.h>
 #include <EnableInterrupt.h>
 
-//TODO Improve Red LED fade, state cast, process game inputs, delay needed after value is shown, disable rogue red LED
+//TODO Improve Red LED fade, process game inputs, disable rogue red LED
 
 /**
  * A simple binary numbers game for the Arduino Uno R3
@@ -25,12 +25,15 @@
 #define GAME_OVER_DELAY 10000
 #define SET_DIFFICULTY_WINDOW 10000
 #define ROUND_SETUP_DELAY 1000
-#define ROUND_TIME_WINDOW 15000
 #define ROUND_RESOLUTION_DELAY 2000
+#define ROUND_MAX_TIME_WINDOW 15000
+#define ROUND_MIN_TIME_WINDOW 3000
+#define ROUND_TIME_DELTA 1000
 #define RED_LIGHT_DELAY 1000
-#define TIME_DELTA 500
+
 
 // Pins
+// Pin 4, 5, 6, 7 are capable of interrupts thanks to EnableInterrupt
 #define BUTTON1_PIN 4
 #define BUTTON2_PIN 5
 #define BUTTON3_PIN 6
@@ -39,9 +42,9 @@
 #define GREEN_LED2_PIN 11
 #define GREEN_LED3_PIN 12
 #define GREEN_LED4_PIN 13
-#define RED_LED_PIN 9
+#define RED_LED_PIN 9               // Must be a PWM capable pin
 #define POTENTIOMETER_PIN A0
-#define UNCONNECTED_ANALOG_PIN A3
+#define UNCONNECTED_ANALOG_PIN A3   // Must be free for better randomness
 
 // Game States
 enum GameState {
@@ -96,13 +99,13 @@ void processGame();
 // Successful round scenario
 void resolveRound();
 
-// Unsuccesful round scenario
+// Unsuccessful round scenario
 void showGameOver();
 
-// Powers on/ff the leds accordingly
+// Powers on/off the LEDs accordingly
 void updateLEDs();
 
-// Fades the red led
+// Fades the red LED
 void manageRedLED();
 
 // Puts the device to sleep
@@ -165,7 +168,7 @@ void initializeGame() {
     redLedBrightnessStep = RED_LED_BRIGHTNESS_STEP;
     score = 0;
     difficulty = VERY_EASY;
-    currentMaxTime = ROUND_TIME_WINDOW;
+    currentMaxTime = ROUND_MAX_TIME_WINDOW;
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Welcome to GMB!");
@@ -201,7 +204,6 @@ void setupDifficulty() {
             lcd.print("Difficulty: " + String(difficulty));
             lcd.setCursor(0, 1);
             lcd.print("Tap B1 to start");
-            currentMaxTime = ROUND_TIME_WINDOW - TIME_DELTA * difficulty;
         }
 
         manageRedLED();
@@ -267,7 +269,9 @@ void processGame() {
 
 void resolveRound() {
     score++;
-    currentMaxTime = currentMaxTime - TIME_DELTA;
+    if (currentMaxTime - (ROUND_TIME_DELTA * difficulty) >= ROUND_MIN_TIME_WINDOW) {
+        currentMaxTime -= ROUND_TIME_DELTA * difficulty;
+    }
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("You won!");
@@ -285,7 +289,7 @@ void showGameOver() {
     lcd.setCursor(0, 0);
     lcd.print("Game Over!");
     lcd.setCursor(0, 1);
-    lcd.print("Score: " + String(score));
+    lcd.print("Final Score: " + String(score));
     delay(GAME_OVER_DELAY);
     gameState = STATE_INITIALIZE;
 }
