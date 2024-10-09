@@ -8,6 +8,8 @@
  * Circuit reference: https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
  **/
 
+// TODO Better win condition logic (invert), handle possible red led edge case, modularize into main.cpp, functions.c, function.h, defines.h, LCD still has text with lcd off
+
 // Constants
 #define LED_COUNT 4
 #define BUTTON_COUNT 4
