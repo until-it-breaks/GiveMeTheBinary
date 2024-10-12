@@ -2,7 +2,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <avr/sleep.h>
 #include <EnableInterrupt.h>
-
+#include "gmbFunctions.h"
+#include "gameStates.h"
 /**
  * A simple binary numbers game for the Arduino Uno R3
  * Circuit reference: https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
@@ -77,51 +78,6 @@ int leds[LED_COUNT] = { GREEN_LED1_PIN, GREEN_LED2_PIN, GREEN_LED3_PIN, GREEN_LE
 int buttons[BUTTON_COUNT] = { BUTTON1_PIN, BUTTON2_PIN, BUTTON3_PIN, BUTTON4_PIN };
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // 0x27 is the most common address for I2C LCDs
-
-
-// Prototypes
-
-// One time setup instructions
-void setup();
-
-// Executes tasks based on the current game state
-void loop();
-
-// Shows a welcome page while also setting things up
-void initializeGame();
-
-// Sets the difficulty choosen. Will either go to next state or put the device to sleep
-void setupDifficulty();
-
-// Sets up a new round
-void setupRound();
-
-// Reads user input and checks the win condition
-void processGame();
-
-// Successful round scenario
-void resolveRound();
-
-// Unsuccessful round scenario
-void showGameOver();
-
-// Powers on/off the LEDs accordingly
-void updateLEDs();
-
-// Fades the red LED
-void fadeRedLED();
-
-// Puts the device to sleep
-void enterSleepMode();
-
-// Instructions to be executed upon wake
-void wakeUp();
-
-// Turns off all LEDs;
-void turnOffLEDs();
-
-// Maps input value to the corresponding difficulty
-int getDifficulty(int value);
 
 void setup() {
     randomSeed(analogRead(UNCONNECTED_ANALOG_PIN));
