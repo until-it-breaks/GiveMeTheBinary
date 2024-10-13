@@ -35,9 +35,6 @@
 #define POTENTIOMETER_PIN A0
 #define UNCONNECTED_ANALOG_PIN A3  
 
-int leds[LED_COUNT] = { GREEN_LED1_PIN, GREEN_LED2_PIN, GREEN_LED3_PIN, GREEN_LED4_PIN };
-int buttons[BUTTON_COUNT] = { BUTTON1_PIN, BUTTON2_PIN, BUTTON3_PIN, BUTTON4_PIN };
-
 enum GameState {
     STATE_INITIALIZE,
     STATE_SETTINGS,
@@ -47,9 +44,8 @@ enum GameState {
     STATE_GAME_OVER
 };
 
-#include <LiquidCrystal_I2C.h>
-extern LiquidCrystal_I2C lcd;
 
-GameState gameState;
+extern GameState gameState;
+
 
 #endif

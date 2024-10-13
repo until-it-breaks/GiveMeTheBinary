@@ -1,18 +1,19 @@
 #include <Arduino.h>
-#include <LiquidCrystal_I2C.h>
 #include <avr/sleep.h>
 #include <EnableInterrupt.h>
 #include "gmbFunctions.h"
 #include "defines.h"
 
+#include <LiquidCrystal_I2C.h>
+extern LiquidCrystal_I2C lcd;
+
 extern int leds[LED_COUNT];
 extern int buttons[BUTTON_COUNT];
 
 // Red LED variables
-int redLedBrightness;
-int redLedBrightnessStep;
-unsigned long previousFadeMillis; 
-extern LiquidCrystal_I2C lcd;
+extern int redLedBrightness;
+extern int redLedBrightnessStep;
+extern unsigned long previousFadeMillis; 
 
 void updateLEDs() {
     for (int i = 0; i < BUTTON_COUNT; i++) {
