@@ -157,12 +157,12 @@ void fadeRedLED() {
     unsigned long currentMillis = millis();
     if (currentMillis - previousFadeMillis >= RED_LED_FADE_DELAY) {
         previousFadeMillis = currentMillis;
-        // Possible edge case where the an out of bound value is written
-        analogWrite(RED_LED_PIN, redLedBrightness);
         redLedBrightness += redLedBrightnessStep;
         if (redLedBrightness <= 0 || redLedBrightness >= 255) {
+            redLedBrightness = constrain(redLedBrightness, 0, 255); // Clamps brightness between 0 and 255
             redLedBrightnessStep = -redLedBrightnessStep;
         }
+        analogWrite(RED_LED_PIN, redLedBrightness);
     }
 }
 
