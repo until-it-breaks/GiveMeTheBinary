@@ -168,6 +168,7 @@ void fadeRedLED() {
 
 void enterSleepMode() {
     lcd.noBacklight();
+    lcd.noDisplay();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);            // Sets the sleep mode
     sleep_enable();                                 // Removes the safety pin
     enableInterrupt(BUTTON1_PIN, wakeUp, RISING);   // RISING is preferrable to HIGH since it only triggers once on press
@@ -180,6 +181,7 @@ void enterSleepMode() {
     disableInterrupt(BUTTON2_PIN);
     disableInterrupt(BUTTON3_PIN);
     disableInterrupt(BUTTON4_PIN);
+    lcd.display();
     lcd.backlight();
 }
 
