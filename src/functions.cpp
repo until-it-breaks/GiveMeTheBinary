@@ -77,34 +77,17 @@ void processGame() {
             timeWindowHasElapsed = true;
         }
         updateLEDs();
-        // This next section could be optimized
-        int sum = 0;
-        for (int i = 0; i < LED_COUNT; i++)
-        {
-            if (digitalRead(leds[i]) == HIGH) {
-            switch (i) {
-                case 0:
-                sum = sum + 1;
-                break;
-                case 1:
-                sum = sum + 2;
-                break;
-                case 2:
-                sum = sum + 4;
-                break;
-                case 3:
-                sum = sum + 8;
-                break;
-                default:
-                sum = sum + 0;
-                break;
-                }
-            }
-        }
-        if (sum == currentRandomValue) {
+        if (currentRandomValue == getPlayerBinaryValue()) {
             gameState = STATE_RESOLVE_ROUND;
         }
     }
+}
+
+int getPlayerBinaryValue() {
+  return (digitalRead(leds[0]) == HIGH ? 8 : 0)
+    + (digitalRead(leds[1]) == HIGH ? 4 : 0)
+    + (digitalRead(leds[2]) == HIGH ? 2 : 0)
+    + (digitalRead(leds[3]) == HIGH ? 1 : 0);
 }
 
 void resolveRound() {

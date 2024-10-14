@@ -55,4 +55,7 @@ void wakeUp();
 // Maps an input value to the corresponding difficulty
 int getDifficulty(int value);
 
+// Returns the player's input values
+int getPlayerBinaryValue();
+
 #endif
