@@ -3,6 +3,7 @@
 
 /**
  * A simple binary numbers game for the Arduino Uno R3
+ * Authors: Jiekai Sun, Weijie Fu
  * Circuit reference: https://www.tinkercad.com/things/epSlpAZTefP-givemethebinary?sharecode=rppd_5WtQ8WaYqnvDhg68Ee-5P04I2m4gol8a1v37rE
  **/
 
